@@ -102,18 +102,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+  <div className="w-full flex flex-col items-center justify-center">
       {/* Header */}
-      <header className="bg-white border-b border-[#E5E7EB]">
-        <div className="max-w-6xl mx-auto px-5 py-5">
-          <h1 className="text-xl font-bold text-[#1E1E1E]">
+      <header className="bg-white border-b border-[#E5E7EB] w-full flex justify-center">
+        <div className="max-w-6xl w-full px-5 py-5 flex justify-center">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#7C3AED] tracking-tight drop-shadow-md">
             Faculty Connect
           </h1>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-5 py-5">
+  <main className="max-w-6xl w-full px-5 py-5 flex flex-col items-center">
         {/* Search Filters */}
         <SearchFilters
           school={school}

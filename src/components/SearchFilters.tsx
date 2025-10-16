@@ -42,13 +42,13 @@ export default function SearchFilters({
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-5 mb-5">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="bg-gradient-to-br from-[#ede9fe] to-[#f3f4f6] rounded-2xl shadow-lg border-2 border-[#A78BFA] p-7 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
         {/* Faculty Name Search */}
         <div>
           <label
             htmlFor="faculty-search"
-            className="block text-sm font-semibold text-[#1E1E1E] mb-2"
+            className="block text-base font-bold text-[#7C3AED] mb-2 tracking-wide"
           >
             Name
           </label>
@@ -58,7 +58,7 @@ export default function SearchFilters({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Search by name..."
-            className="w-full px-4 py-2.5 border border-[#E5E7EB] rounded-[10px] focus:ring-2 focus:ring-[#A78BFA] focus:border-[#A78BFA] transition-all duration-200 text-sm text-[#1E1E1E] placeholder:text-[#6B7280]"
+            className="w-full px-4 py-3 border-2 border-[#A78BFA] rounded-[10px] focus:ring-2 focus:ring-[#A78BFA] focus:border-[#7C3AED] transition-all duration-200 text-base text-[#1E1E1E] placeholder:text-[#A78BFA] bg-white shadow-sm"
           />
         </div>
 
