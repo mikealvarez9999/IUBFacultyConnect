@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import SearchableDropdown from './SearchableDropdown';
 
 interface SearchFiltersProps {
   school: string;
@@ -19,19 +20,37 @@ export default function SearchFilters({
   onDepartmentChange,
   onQueryChange,
 }: SearchFiltersProps) {
+  const [schools, setSchools] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  // Fetch filter options
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const response = await fetch('/api/filters');
+        if (response.ok) {
+          const data = await response.json();
+          setSchools(data.schools || []);
+          setDepartments(data.departments || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch filters:', error);
+      }
+    };
+
+    fetchFilters();
+  }, []);
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-6">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
-        Search Faculty
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-5 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Faculty Name Search */}
         <div>
           <label
             htmlFor="faculty-search"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            className="block text-sm font-semibold text-[#1E1E1E] mb-2"
           >
-            Faculty Name
+            Name
           </label>
           <input
             id="faculty-search"
@@ -39,45 +58,27 @@ export default function SearchFilters({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Search by name..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            className="w-full px-4 py-2.5 border border-[#E5E7EB] rounded-[10px] focus:ring-2 focus:ring-[#A78BFA] focus:border-[#A78BFA] transition-all duration-200 text-sm text-[#1E1E1E] placeholder:text-[#6B7280]"
           />
         </div>
 
         {/* School Filter */}
-        <div>
-          <label
-            htmlFor="school-filter"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            School
-          </label>
-          <input
-            id="school-filter"
-            type="text"
-            value={school}
-            onChange={(e) => onSchoolChange(e.target.value)}
-            placeholder="e.g., SLASS, SEBE..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-        </div>
+        <SearchableDropdown
+          label="School"
+          value={school}
+          onChange={onSchoolChange}
+          options={schools}
+          placeholder="All Schools"
+        />
 
         {/* Department Filter */}
-        <div>
-          <label
-            htmlFor="department-filter"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Department
-          </label>
-          <input
-            id="department-filter"
-            type="text"
-            value={department}
-            onChange={(e) => onDepartmentChange(e.target.value)}
-            placeholder="e.g., CSE, EEE..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-        </div>
+        <SearchableDropdown
+          label="Department"
+          value={department}
+          onChange={onDepartmentChange}
+          options={departments}
+          placeholder="All Departments"
+        />
       </div>
     </div>
   );
