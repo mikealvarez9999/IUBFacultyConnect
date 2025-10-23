@@ -1,199 +1,323 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import FacultyCard from '@/components/FacultyCard';
-import SearchFilters from '@/components/SearchFilters';
+import React, { useEffect, useState } from "react";
 
 interface Faculty {
-  id: number;
+  id: string;
   name: string;
-  designation: string;
-  department: string;
-  school: string;
-  email?: string;
-  phone?: string;
+  position?: string;
   image?: string;
+  email?: string;
+  school?: string;
+  department?: string;
+  slug?: string;
+  officeAddress?: string;
+  googleScholarLink?: string;
+  orchidLink?: string;
+  areaOfExpertise?: any[];
+  totalCitations?: number;
+  hIndex?: number;
+  i10Index?: number;
 }
 
-export default function Home() {
+interface Staff {
+  id: string;
+  name: string;
+  position?: string;
+  image?: string;
+  email?: string;
+  officeAddress?: string;
+}
+
+interface School {
+  slug: string;
+  name: string;
+}
+
+interface Department {
+  slug: string;
+  name: string;
+}
+
+export default function DirectoryPage() {
+  const [schools, setSchools] = useState<School[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const [selectedDept, setSelectedDept] = useState("");
+  const [dean, setDean] = useState<Staff | null>(null);
+  const [schoolStaff, setSchoolStaff] = useState<Staff[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
-  const [filteredFaculties, setFilteredFaculties] = useState<Faculty[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [academicStaffs, setAcademicStaffs] = useState<Staff[]>([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  
-  // Search filters
-  const [school, setSchool] = useState('');
-  const [department, setDepartment] = useState('');
-  const [query, setQuery] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch faculties from API
-  const fetchFaculties = useCallback(async (pageNum: number = 1) => {
+  const PAGE_SIZE = 10;
+
+  // Fetch schools on mount
+  useEffect(() => {
+    async function fetchSchools() {
+      try {
+        const res = await fetch("/api/directory");
+        const data = await res.json();
+        const schoolList: School[] = (data.schoolDirectory || []).map(
+          (s: any) => ({
+            slug: s.slug,
+            name: s.name,
+          })
+        );
+        setSchools(schoolList);
+      } catch (err) {
+        console.error("Failed to fetch schools:", err);
+      }
+    }
+    fetchSchools();
+  }, []);
+
+  // Fetch departments and school info when a school is selected
+  const fetchDepartmentsAndSchoolInfo = async (schoolSlug: string) => {
+    if (!schoolSlug) return;
     try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        school,
-        department,
-        page: pageNum.toString(),
-        size: '20',
-      });
-
-      const response = await fetch(`/api/faculties?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch faculty data');
-      }
-
-      const data = await response.json();
-      
-      // Handle different possible response structures
-      let facultyData: Faculty[] = [];
-      
-      if (Array.isArray(data)) {
-        facultyData = data;
-      } else if (data.data && Array.isArray(data.data)) {
-        facultyData = data.data;
-      } else if (data.faculties && Array.isArray(data.faculties)) {
-        facultyData = data.faculties;
-      }
-
-      if (pageNum === 1) {
-        setFaculties(facultyData);
-        setError(null);
-      } else {
-        setFaculties((prev) => [...prev, ...facultyData]);
-      }
-
-      setHasMore(facultyData.length === 20);
+      const res = await fetch(`/api/getDept/${schoolSlug}`);
+      const data = await res.json();
+      setDepartments(data.departments || []);
+      setDean(data.dean || null);
+      setSchoolStaff(data.schoolStaff || []);
+      setSelectedDept("");
+      setFaculties([]);
+      setAcademicStaffs([]);
+      setPage(1);
     } catch (err) {
-      console.error('Fetch error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setHasMore(false);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch departments/school info:", err);
     }
-  }, [school, department]);
-
-  // Initial fetch and refetch when filters change
-  useEffect(() => {
-    setPage(1);
-    fetchFaculties(1);
-  }, [school, department, fetchFaculties]);
-
-  // Filter faculties by search query
-  useEffect(() => {
-    if (!query.trim()) {
-      setFilteredFaculties(faculties);
-    } else {
-      const lowerQuery = query.toLowerCase();
-      const filtered = faculties.filter((faculty) =>
-        faculty.name.toLowerCase().includes(lowerQuery)
-      );
-      setFilteredFaculties(filtered);
-    }
-  }, [faculties, query]);
-
-  // Load more faculties
-  const loadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchFaculties(nextPage);
   };
 
-  return (
-  <div className="w-full flex flex-col items-center justify-center">
-      {/* Header */}
-      <header className="bg-white border-b border-[#E5E7EB] w-full flex justify-center">
-        <div className="max-w-6xl w-full px-5 py-6 flex justify-center">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#7C3AED] tracking-tight drop-shadow-md">
-            Faculty Connect
-          </h1>
-        </div>
-      </header>
+  // Fetch faculties + academic staffs
+  const fetchFaculties = async (pageNumber = 1) => {
+    if (!selectedSchool || !selectedDept) return;
+    try {
+      const res = await fetch(
+        `/api/faculties?school=${selectedSchool}&department=${selectedDept}&page=${pageNumber}`
+      );
+      const data = await res.json();
 
-      {/* Main Content */}
-  <main className="max-w-6xl w-full px-5 py-5 flex flex-col items-center">
-        {/* Search Filters */}
-        <SearchFilters
-          school={school}
-          department={department}
-          query={query}
-          onSchoolChange={setSchool}
-          onDepartmentChange={setDepartment}
-          onQueryChange={setQuery}
+      setFaculties(data.faculties || []);
+      setAcademicStaffs(data.academicStaffs || []); // only set once, first fetch
+      const total =
+        data.pagination?.facultyTotal || data.faculties?.length || 0;
+      setTotalPages(Math.ceil(total / PAGE_SIZE));
+      setPage(pageNumber);
+    } catch (err) {
+      console.error("Failed to fetch faculties:", err);
+    }
+  };
+
+  const renderStaffCard = (s: Staff, showViewMore = false, slug?: string) => (
+    <div key={s.id} className="border p-4 rounded flex flex-col items-center">
+      {s.image && (
+        <img
+          src={s.image}
+          alt={s.name}
+          className="w-24 h-24 rounded-full object-cover mb-3"
         />
+      )}
+      <h2 className="font-semibold text-center">{s.name}</h2>
+      {s.position && (
+        <p className="text-sm text-gray-600 text-center">{s.position}</p>
+      )}
+      {s.email && <p className="text-sm text-blue-600 truncate">{s.email}</p>}
+      {s.officeAddress && (
+        <p className="text-sm text-gray-500">{s.officeAddress}</p>
+      )}
+      {showViewMore && slug && (
+        <a
+          href={`https://iub.ac.bd/faculties/${slug}`}
+          target="_blank"
+          className="mt-3 text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
+        >
+          View More
+        </a>
+      )}
+    </div>
+  );
 
-        {/* Error Message */}
-        {error && filteredFaculties.length === 0 && (
-          <div className="bg-[#FEE2E2] border border-[#FEE2E2] text-[#991B1B] px-4 py-3 rounded-2xl mb-4">
-            <p className="font-semibold text-sm">Error: {error}</p>
-          </div>
+  const renderFacultyCard = (f: Faculty) => (
+    <div key={f.id} className="border p-4 rounded flex flex-col items-center">
+      {f.image && (
+        <img
+          src={f.image}
+          alt={f.name}
+          className="w-24 h-24 rounded-full object-cover mb-3"
+        />
+      )}
+      <h2 className="font-semibold text-center">{f.name}</h2>
+      {f.position && (
+        <p className="text-sm text-gray-600 text-center">{f.position}</p>
+      )}
+      {f.department && <p className="text-sm text-gray-500">{f.department}</p>}
+      {f.email && <p className="text-sm text-blue-600 truncate">{f.email}</p>}
+      {f.officeAddress && (
+        <p className="text-sm text-gray-500">{f.officeAddress}</p>
+      )}
+
+      {/* Area of expertise */}
+      {/* <ul className="text-sm text-gray-700 mt-2 list-disc list-inside">
+        {f.areaOfExpertise
+          ?.flatMap(
+            (block: any) =>
+              block.children?.flatMap(
+                (li: any) => li.children?.map((c: any) => c.text) || []
+              ) || []
+          )
+          .map((text: string, idx: number) => (
+            <li key={idx}>{text}</li>
+          ))}
+      </ul> */}
+
+      {/* Links */}
+      {/* <div className="flex gap-2 mt-2 flex-wrap justify-center">
+        {f.googleScholarLink && (
+          <a
+            href={f.googleScholarLink}
+            target="_blank"
+            className="text-sm text-blue-500 underline"
+          >
+            Google Scholar
+          </a>
         )}
-
-        {/* Results Count */}
-        {!loading && (
-          <div className="mb-4 text-sm text-[#6B7280]">
-            {filteredFaculties.length} {filteredFaculties.length === 1 ? 'contact' : 'contacts'}
-          </div>
+        {f.orchidLink && (
+          <a
+            href={f.orchidLink}
+            target="_blank"
+            className="text-sm text-blue-500 underline"
+          >
+            ORCID
+          </a>
         )}
+      </div> */}
 
-        {/* Loading State */}
-        {loading && page === 1 ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#A78BFA]"></div>
+      {/* View more */}
+      <a
+        href={`https://iub.ac.bd/faculties/${f.slug}`}
+        target="_blank"
+        className="mt-3 text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
+      >
+        View More
+      </a>
+    </div>
+  );
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Faculty Directory</h1>
+
+      {/* Dropdowns */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <select
+          className="border p-2 rounded flex-1 min-w-[200px]"
+          value={selectedSchool}
+          onChange={(e) => {
+            const schoolSlug = e.target.value;
+            setSelectedSchool(schoolSlug);
+            fetchDepartmentsAndSchoolInfo(schoolSlug);
+          }}
+        >
+          <option value="">Select School</option>
+          {schools.map((s) => (
+            <option key={s.slug} value={s.slug}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="border p-2 rounded flex-1 min-w-[200px]"
+          value={selectedDept}
+          onChange={(e) => setSelectedDept(e.target.value)}
+          disabled={!selectedSchool || departments.length === 0}
+        >
+          <option value="">Select Department</option>
+          {departments.map((d) => (
+            <option key={d.slug} value={d.slug}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          disabled={!selectedSchool || !selectedDept}
+          onClick={() => fetchFaculties(1)}
+        >
+          Find
+        </button>
+      </div>
+
+      {/* Dean */}
+      {dean && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">School Dean</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {renderStaffCard(dean)}
           </div>
-        ) : (
-          <>
-            {/* Faculty Grid */}
-            {filteredFaculties.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-base text-[#6B7280]">
-                  No contacts found matching your criteria.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
-                {filteredFaculties.map((faculty) => (
-                  <FacultyCard
-                    key={faculty.id}
-                    name={faculty.name}
-                    designation={faculty.designation}
-                    department={faculty.department}
-                    school={faculty.school}
-                    email={faculty.email}
-                    phone={faculty.phone}
-                    image={faculty.image}
-                  />
-                ))}
-              </div>
-            )}
+        </div>
+      )}
 
-            {/* Load More Button */}
-            {hasMore && !query && filteredFaculties.length > 0 && (
-              <div className="flex justify-center mt-5">
-                <button
-                  onClick={loadMore}
-                  disabled={loading}
-                  className="bg-[#A78BFA] hover:bg-[#9061F9] disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-[10px] transition-all duration-200 text-sm"
-                >
-                  {loading ? (
-                    <span className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Loading...
-                    </span>
-                  ) : (
-                    'Load More'
-                  )}
-                </button>
-              </div>
-            )}
-          </>
+      {/* School Staff */}
+      {schoolStaff.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">School Staff</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {schoolStaff.map((s) => renderStaffCard(s))}
+          </div>
+        </div>
+      )}
+
+      {/* Faculties */}
+      {faculties.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Faculties</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {faculties.map((f) => renderFacultyCard(f))}
+          </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-6 flex-wrap">
+          {Array.from({ length: totalPages }, (_, idx) => (
+            <button
+              key={idx + 1}
+              onClick={() => fetchFaculties(idx + 1)}
+              className={`px-3 py-1 rounded border ${
+                page === idx + 1 ? "bg-blue-600 text-white" : "bg-white"
+              }`}
+            >
+              {idx + 1}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Academic Staff */}
+      {academicStaffs.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Academic Staff</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {academicStaffs.map((s) => renderStaffCard(s))}
+          </div>
+        </div>
+      )}
+
+      {faculties.length === 0 &&
+        academicStaffs.length === 0 &&
+        selectedSchool &&
+        selectedDept && (
+          <p className="mt-4 text-gray-500 text-center">
+            No faculty or academic staff found for the selected school &
+            department.
+          </p>
         )}
-      </main>
     </div>
   );
 }
