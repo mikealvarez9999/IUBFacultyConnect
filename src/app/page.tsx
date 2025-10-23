@@ -105,8 +105,8 @@ export default function Home() {
   <div className="w-full flex flex-col items-center justify-center">
       {/* Header */}
       <header className="bg-white border-b border-[#E5E7EB] w-full flex justify-center">
-        <div className="max-w-6xl w-full px-5 py-5 flex justify-center">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#7C3AED] tracking-tight drop-shadow-md">
+        <div className="max-w-6xl w-full px-5 py-6 flex justify-center">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#7C3AED] tracking-tight drop-shadow-md">
             Faculty Connect
           </h1>
         </div>
