@@ -1,0 +1,24 @@
+'use client';
+import React from "react";
+
+interface PaginationProps {
+  totalPages: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+}
+
+export default function Pagination({ totalPages, currentPage, onPageChange }: PaginationProps) {
+  return (
+    <div className="flex justify-center gap-2 mt-6 flex-wrap">
+      {Array.from({ length: totalPages }, (_, idx) => (
+        <button
+          key={idx + 1}
+          onClick={() => onPageChange(idx + 1)}
+          className={`px-3 py-1 rounded border ${currentPage === idx + 1 ? "bg-blue-600 text-white" : "bg-white"}`}
+        >
+          {idx + 1}
+        </button>
+      ))}
+    </div>
+  );
+}
