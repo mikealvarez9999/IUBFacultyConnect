@@ -52,7 +52,7 @@ export default function SearchableDropdown({
 
   return (
     <div ref={dropdownRef} className="relative">
-      <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">
+      <label className="block text-lg font-bold text-[#7C3AED] mb-2 tracking-wide">
         {label}
       </label>
       

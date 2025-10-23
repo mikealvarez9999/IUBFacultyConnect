@@ -23,10 +23,10 @@ export default function FacultyCard({
   image,
 }: FacultyCardProps) {
   return (
-    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center max-w-md mx-auto">
+    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-8 hover:shadow-lg transition-shadow duration-200 flex flex-col items-center max-w-md mx-auto">
       <div className="flex items-center gap-5 w-full">
         {/* Faculty Image */}
-  <div className="w-16 h-16 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center text-[#A78BFA] text-2xl font-bold flex-shrink-0 overflow-hidden relative shadow-sm">
+  <div className="w-16 h-16 rounded-full bg-white border-2 border-[#E5E7EB] flex items-center justify-center text-[#A78BFA] text-2xl font-bold flex-shrink-0 overflow-hidden relative shadow-sm">
           {image ? (
             <Image src={image} alt={name} fill className="object-cover" />
           ) : (

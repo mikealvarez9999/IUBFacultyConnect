@@ -42,13 +42,13 @@ export default function SearchFilters({
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-[#ede9fe] to-[#f3f4f6] rounded-2xl shadow-lg border-2 border-[#A78BFA] p-7 mb-8">
+    <div className="bg-gradient-to-br from-[#ede9fe] to-[#f3f4f6] rounded-2xl shadow-lg border-2 border-[#A78BFA] p-8 mb-8">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end">
         {/* Faculty Name Search */}
         <div>
           <label
             htmlFor="faculty-search"
-            className="block text-base font-bold text-[#7C3AED] mb-2 tracking-wide"
+            className="block text-lg font-bold text-[#7C3AED] mb-2 tracking-wide"
           >
             Name
           </label>
